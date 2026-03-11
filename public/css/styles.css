@@ -46,7 +46,11 @@ img { max-width: 100%; height: auto; }
     box-shadow: var(--shadow);
 }
 .navbar-main .navbar-brand { display: flex; align-items: center; gap: 12px; }
-.navbar-main .navbar-brand img { height: 45px; }
+.navbar-main .navbar-brand img {
+    height: 45px;
+    width: auto;
+    object-fit: contain;
+}
 .navbar-main .navbar-brand span { color: #fff; font-weight: 700; font-size: 1.1rem; }
 .navbar-main .nav-link { color: rgba(255,255,255,0.9)!important; font-weight: 500; padding: 1rem 1.2rem!important; border-bottom: 3px solid transparent; }
 .navbar-main .nav-link:hover, .navbar-main .nav-link.active { color: #fff!important; background: rgba(255,255,255,0.1); border-bottom-color: var(--secondary); }
