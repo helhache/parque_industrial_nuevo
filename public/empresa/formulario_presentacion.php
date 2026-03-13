@@ -2,7 +2,7 @@
 /**
  * Formulario de Presentación y Pedido de Lote - Empresa
  */
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../../config/config.php';
 
 if (!$auth->requireRole(['empresa'], PUBLIC_URL . '/login.php')) exit;
 

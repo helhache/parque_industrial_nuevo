@@ -58,10 +58,13 @@ $respuestas = $stmt->fetchAll();
         <nav class="sidebar-menu">
             <a href="dashboard.php"><i class="bi bi-speedometer2"></i> Dashboard</a>
             <a href="empresas.php"><i class="bi bi-buildings"></i> Empresas</a>
+            <a href="nueva-empresa.php"><i class="bi bi-plus-circle"></i> Nueva Empresa</a>
             <a href="formularios.php"><i class="bi bi-file-earmark-text"></i> Formularios</a>
             <a href="formularios-dinamicos.php" class="active"><i class="bi bi-ui-checks"></i> Formularios dinámicos</a>
-            <a href="graficos.php"><i class="bi bi-graph-up"></i> Gráficos</a>
+            <a href="graficos.php"><i class="bi bi-graph-up"></i> Gráficos y Datos</a>
             <a href="publicaciones.php"><i class="bi bi-megaphone"></i> Publicaciones</a>
+            <a href="notificaciones.php"><i class="bi bi-bell"></i> Notificaciones</a>
+            <a href="exportar.php"><i class="bi bi-download"></i> Exportar</a>
             <hr class="my-3 border-secondary">
             <a href="<?= PUBLIC_URL ?>/" target="_blank"><i class="bi bi-globe"></i> Ver sitio</a>
             <a href="<?= PUBLIC_URL ?>/logout.php"><i class="bi bi-box-arrow-left"></i> Cerrar sesión</a>
