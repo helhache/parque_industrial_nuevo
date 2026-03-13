@@ -97,7 +97,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Obtener rubros y ubicaciones desde BD
-$rubros = $db->query("SELECT DISTINCT nombre FROM rubros WHERE activo = 1 ORDER BY orden, nombre")->fetchAll(PDO::FETCH_COLUMN);
+// En MySQL 8 (modo estricto) no se puede usar DISTINCT con ORDER BY en una columna no seleccionada
+// por eso se quita DISTINCT y se ordena por orden, nombre
+$rubros = $db->query("SELECT nombre FROM rubros WHERE activo = 1 ORDER BY orden, nombre")->fetchAll(PDO::FETCH_COLUMN);
 $ubicaciones = $db->query("SELECT nombre FROM ubicaciones WHERE activo = 1 ORDER BY nombre")->fetchAll(PDO::FETCH_COLUMN);
 ?>
 <!DOCTYPE html>
