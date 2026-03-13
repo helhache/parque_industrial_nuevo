@@ -109,7 +109,9 @@ if (!$empresa) {
 }
 
 // Obtener rubros desde la tabla rubros
-$stmt = $db->query("SELECT DISTINCT nombre FROM rubros WHERE activo = 1 ORDER BY orden, nombre");
+// En MySQL 8 (modo estricto) DISTINCT + ORDER BY en columna no seleccionada da error,
+// por eso se quita DISTINCT y se ordena por orden, nombre
+$stmt = $db->query("SELECT nombre FROM rubros WHERE activo = 1 ORDER BY orden, nombre");
 $rubros = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
 // Obtener ubicaciones
