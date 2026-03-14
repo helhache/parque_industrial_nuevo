@@ -1,6 +1,6 @@
 <?php
 /**
- * Carrusel del inicio - Banners editables con Cloudinary y soporte de Video
+ * Carrusel del inicio - Banners editables (solo imágenes, Cloudinary)
  */
 require_once __DIR__ . '/../../config/config.php';
 
@@ -61,8 +61,6 @@ if ($table_exists && $_SERVER['REQUEST_METHOD'] === 'POST' && verify_csrf($_POST
     if ($accion === 'guardar') {
         $titulo = trim($_POST['titulo'] ?? '');
         $subtitulo = trim($_POST['subtitulo'] ?? '');
-        $tipo = $_POST['tipo'] ?? 'imagen';
-        $url_video = trim($_POST['url_video'] ?? '');
         $orden = (int)($_POST['orden'] ?? 0);
         $activo = isset($_POST['activo']) ? 1 : 0;
 
@@ -77,16 +75,16 @@ if ($table_exists && $_SERVER['REQUEST_METHOD'] === 'POST' && verify_csrf($_POST
                 $stmt->execute([$id]);
                 $imagen_url = $stmt->fetchColumn();
             }
-            $stmt = $db->prepare("UPDATE banners_home SET titulo=?, subtitulo=?, imagen=?, tipo=?, url_video=?, orden=?, activo=? WHERE id=?");
-            $stmt->execute([$titulo, $subtitulo, $imagen_url, $tipo, $url_video ?: null, $orden, $activo, $id]);
+            $stmt = $db->prepare("UPDATE banners_home SET titulo=?, subtitulo=?, imagen=?, tipo='imagen', url_video=NULL, orden=?, activo=? WHERE id=?");
+            $stmt->execute([$titulo, $subtitulo, $imagen_url, $orden, $activo, $id]);
             set_flash('success', 'Banner actualizado.');
         } else {
-            if ($tipo === 'video' || $imagen_url) {
-                $stmt = $db->prepare("INSERT INTO banners_home (titulo, subtitulo, imagen, tipo, url_video, orden, activo) VALUES (?,?,?,?,?,?,?)");
-                $stmt->execute([$titulo, $subtitulo, $imagen_url, $tipo, $url_video ?: null, $orden, $activo]);
+            if ($imagen_url) {
+                $stmt = $db->prepare("INSERT INTO banners_home (titulo, subtitulo, imagen, tipo, url_video, orden, activo) VALUES (?,?,?,'imagen',NULL,?,?)");
+                $stmt->execute([$titulo, $subtitulo, $imagen_url, $orden, $activo]);
                 set_flash('success', 'Banner agregado.');
             } else {
-                set_flash('error', 'Suba una imagen o indique URL de video.');
+                set_flash('error', 'Suba una imagen.');
             }
         }
         redirect('banners.php');
@@ -159,20 +157,12 @@ if ($table_exists && isset($_GET['editar'])) {
                             <label class="form-label">Subtítulo</label>
                             <input type="text" name="subtitulo" class="form-control" value="<?= e($editar['subtitulo'] ?? '') ?>" placeholder="Texto secundario">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Tipo</label>
-                            <select name="tipo" class="form-select" id="bannerTipo">
-                                <option value="imagen" <?= ($editar['tipo'] ?? '') === 'video' ? '' : 'selected' ?>>Imagen (Cloudinary)</option>
-                                <option value="video" <?= ($editar['tipo'] ?? '') === 'video' ? 'selected' : '' ?>>Video (YouTube/URL)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4" id="wrapImagen">
+                        <div class="col-md-6">
                             <label class="form-label">Imagen</label>
                             <input type="file" name="imagen" class="form-control" accept="image/*">
-                        </div>
-                        <div class="col-md-4 d-none" id="wrapVideo">
-                            <label class="form-label">URL del video</label>
-                            <input type="url" name="url_video" class="form-control" value="<?= e($editar['url_video'] ?? '') ?>" placeholder="https://youtube.com/...">
+                            <?php if (!empty($editar['imagen'])): ?>
+                                <small class="text-muted">Actual: se mantiene si no elige otra.</small>
+                            <?php endif; ?>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Orden</label>
@@ -201,7 +191,7 @@ if ($table_exists && isset($_GET['editar'])) {
                     <thead class="table-light">
                         <tr>
                             <th>Vista</th>
-                            <th>Título / Tipo</th>
+                            <th>Título</th>
                             <th>Orden</th>
                             <th>Estado</th>
                             <th>Acciones</th>
@@ -211,17 +201,14 @@ if ($table_exists && isset($_GET['editar'])) {
                         <?php foreach ($banners as $b): ?>
                         <tr>
                             <td>
-                                <?php if ($b['tipo'] === 'video'): ?>
-                                    <div class="bg-dark text-white d-flex align-items-center justify-content-center" style="height: 50px; width: 80px; border-radius: 5px;">
-                                        <i class="bi bi-play-circle"></i>
-                                    </div>
+                                <?php if (!empty($b['imagen'])): ?>
+                                    <img src="<?= e($b['imagen']) ?>" alt="" style="height: 50px; width: 80px; object-fit: cover; border-radius: 5px;">
                                 <?php else: ?>
-                                    <img src="<?= e($b['imagen']) ?>" style="height: 50px; width: 80px; object-fit: cover; border-radius: 5px;">
+                                    <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 50px; width: 80px; border-radius: 5px;"><i class="bi bi-image"></i></div>
                                 <?php endif; ?>
                             </td>
                             <td>
                                 <div><strong><?= e($b['titulo'] ?: 'Sin título') ?></strong></div>
-                                <small class="text-muted"><?= ucfirst($b['tipo']) ?></small>
                             </td>
                             <td><?= $b['orden'] ?></td>
                             <td><?= $b['activo'] ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>' ?></td>
@@ -242,24 +229,5 @@ if ($table_exists && isset($_GET['editar'])) {
         </div>
     </main>
 
-    <script>
-        // Lógica para mostrar/ocultar campos según el tipo seleccionado
-        const bannerTipo = document.getElementById('bannerTipo');
-        const wrapImagen = document.getElementById('wrapImagen');
-        const wrapVideo = document.getElementById('wrapVideo');
-
-        function toggleFields() {
-            if (bannerTipo.value === 'video') {
-                wrapImagen.classList.add('d-none');
-                wrapVideo.classList.remove('d-none');
-            } else {
-                wrapImagen.classList.remove('d-none');
-                wrapVideo.classList.add('d-none');
-            }
-        }
-
-        bannerTipo.addEventListener('change', toggleFields);
-        toggleFields(); // Ejecutar al cargar por si es una edición
-    </script>
 </body>
 </html>
