@@ -57,13 +57,15 @@ $hero_imagen_fallback = (defined('PUBLIC_URL') ? PUBLIC_URL : '') . '/img/hero-p
         <div class="carousel-inner h-100">
             <?php foreach ($banners_home as $i => $b): ?>
             <?php
-            $slide_imagen = '';
-            if ($b['tipo'] === 'video' && !empty($b['url_video'])) {
-                // video: se pinta con iframe
-            } elseif (!empty($b['imagen']) && defined('UPLOADS_URL')) {
-                $slide_imagen = UPLOADS_URL . '/' . $b['imagen'];
-            } else {
-                $slide_imagen = $hero_imagen_fallback;
+            $slide_imagen = $hero_imagen_fallback;
+            if ($b['tipo'] !== 'video' && !empty($b['imagen'])) {
+                // Si es URL absoluta (Cloudinary, etc.) usarla tal cual; si no, ruta local
+                $img = trim($b['imagen']);
+                if (preg_match('#^https?://#i', $img)) {
+                    $slide_imagen = $img;
+                } elseif (defined('UPLOADS_URL')) {
+                    $slide_imagen = UPLOADS_URL . '/' . $img;
+                }
             }
             $slide_titulo = trim($b['titulo'] ?? '') ?: $hero_titulo_default;
             $slide_subtitulo = trim($b['subtitulo'] ?? '') ?: $hero_subtitulo_default;
