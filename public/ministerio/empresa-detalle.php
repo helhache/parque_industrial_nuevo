@@ -14,13 +14,31 @@ if ($emp_id <= 0) {
     redirect('empresas.php');
 }
 
-$stmt = $db->prepare("SELECT e.*, u.email as usuario_email, u.ultimo_acceso, u.activo as usuario_activo FROM empresas e LEFT JOIN usuarios u ON e.usuario_id = u.id WHERE e.id = ?");
+$stmt = $db->prepare("SELECT * FROM empresas WHERE id = ?");
 $stmt->execute([$emp_id]);
 $empresa = $stmt->fetch();
 
 if (!$empresa) {
     set_flash('error', 'Empresa no encontrada');
     redirect('empresas.php');
+}
+
+$empresa['usuario_email'] = null;
+$empresa['ultimo_acceso'] = null;
+$empresa['usuario_activo'] = null;
+if (!empty($empresa['usuario_id'])) {
+    try {
+        $stmt = $db->prepare("SELECT email, ultimo_acceso, activo FROM usuarios WHERE id = ?");
+        $stmt->execute([$empresa['usuario_id']]);
+        $u = $stmt->fetch();
+        if ($u) {
+            $empresa['usuario_email'] = $u['email'];
+            $empresa['ultimo_acceso'] = $u['ultimo_acceso'] ?? null;
+            $empresa['usuario_activo'] = $u['activo'] ?? null;
+        }
+    } catch (Exception $e) {
+        error_log("empresa-detalle usuario: " . $e->getMessage());
+    }
 }
 
 $page_title = $empresa['nombre'];
@@ -46,10 +64,15 @@ $stmt = $db->prepare("
 $stmt->execute([$emp_id]);
 $actividad = $stmt->fetchAll();
 
-// Visitas últimos 30 días
-$stmt = $db->prepare("SELECT COUNT(*) FROM visitas_empresa WHERE empresa_id = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
-$stmt->execute([$emp_id]);
-$visitas_mes = $stmt->fetchColumn();
+// Visitas últimos 30 días (si existe la tabla)
+$visitas_mes = 0;
+try {
+    $stmt = $db->prepare("SELECT COUNT(*) FROM visitas_empresa WHERE empresa_id = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+    $stmt->execute([$emp_id]);
+    $visitas_mes = (int) $stmt->fetchColumn();
+} catch (Exception $e) {
+    error_log("empresa-detalle visitas_empresa: " . $e->getMessage());
+}
 
 // Perfil completo
 $campos_perfil = ['nombre', 'cuit', 'rubro', 'descripcion', 'ubicacion', 'telefono', 'email_contacto', 'contacto_nombre', 'logo'];
@@ -241,12 +264,14 @@ $perfil_completo = round(($completos / count($campos_perfil)) * 100);
                 <div class="card mb-4">
                     <div class="card-body text-center">
                         <?php
-                        $logo_src = PUBLIC_URL . '/img/placeholder-logo.png';
+                        $logo_src = '';
                         if (!empty($empresa['logo'])) {
                             $logo_src = UPLOADS_URL . '/logos/' . $empresa['logo'];
+                        } else {
+                            $logo_src = 'data:image/svg+xml,' . rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect fill="#e9ecef" width="120" height="120"/><text x="60" y="68" font-size="48" fill="#6c757d" text-anchor="middle">🏢</text></svg>');
                         }
                         ?>
-                        <img src="<?= e($logo_src) ?>" alt="Logo" class="img-fluid rounded mb-3" style="max-height: 150px; background: #f8f9fa;">
+                        <img src="<?= $logo_src ?>" alt="Logo" class="img-fluid rounded mb-3" style="max-height: 150px; background: #f8f9fa;">
                         <h5><?= e($empresa['nombre']) ?></h5>
                         <p class="text-muted"><?= e($empresa['rubro'] ?: 'Sin rubro') ?></p>
                         <?php if ($empresa['facebook'] || $empresa['instagram']): ?>

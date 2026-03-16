@@ -39,14 +39,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verify_csrf($_POST[CSRF_TOKEN_NAME]
         $slug = slugify($titulo);
         $imagen = null;
 
-        if (!empty($_FILES['imagen']['name'])) {
-            $resultado = upload_file($_FILES['imagen'], 'publicaciones', ['image/jpeg', 'image/png', 'image/webp'], 2 * 1024 * 1024);
+        if (!empty($_FILES['imagen']['name']) && isset($_FILES['imagen']['error']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+            $resultado = upload_file($_FILES['imagen'], 'publicaciones', ALLOWED_IMAGE_TYPES);
             if ($resultado['success']) {
                 $imagen = $resultado['filename'];
             } else {
                 set_flash('error', $resultado['error']);
                 redirect('publicaciones.php' . ($id ? "?editar=$id" : '?nueva=1'));
             }
+        }
+
+        $usuario_id = $_SESSION['user_id'] ?? null;
+        if (!$usuario_id && $empresa_id) {
+            $stmt = $db->prepare("SELECT usuario_id FROM empresas WHERE id = ?");
+            $stmt->execute([$empresa_id]);
+            $usuario_id = $stmt->fetchColumn();
+        }
+        if (!$usuario_id) {
+            set_flash('error', 'Sesión inválida. Vuelva a iniciar sesión.');
+            redirect('publicaciones.php');
         }
 
         try {
@@ -75,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verify_csrf($_POST[CSRF_TOKEN_NAME]
             } else {
                 $sql = "INSERT INTO publicaciones (empresa_id, usuario_id, titulo, slug, tipo, extracto, contenido, imagen, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $db->prepare($sql);
-                $stmt->execute([$empresa_id, $_SESSION['user_id'], $titulo, $slug, $tipo, $extracto, $contenido, $imagen, $estado]);
+                $stmt->execute([$empresa_id, $usuario_id, $titulo, $slug, $tipo, $extracto, $contenido, $imagen, $estado]);
                 $id = $db->lastInsertId();
             }
 
@@ -93,8 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verify_csrf($_POST[CSRF_TOKEN_NAME]
             }
             redirect('publicaciones.php');
         } catch (Exception $e) {
-            error_log("Error publicación: " . $e->getMessage());
-            set_flash('error', 'Error al guardar la publicación');
+            error_log("Error publicación empresa_id=$empresa_id: " . $e->getMessage());
+            set_flash('error', 'Error al guardar la publicación. Vuelva a intentar.');
             redirect('publicaciones.php');
         }
     }

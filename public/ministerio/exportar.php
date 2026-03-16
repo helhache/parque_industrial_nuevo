@@ -16,10 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verify_csrf($_POST[CSRF_TOKEN_NAME]
     if ($exportar === 'empresas') {
         $stmt = $db->query("
             SELECT e.nombre, e.razon_social, e.cuit, e.rubro, e.estado, e.ubicacion, e.direccion,
-                   e.telefono, e.email_contacto, e.contacto_nombre, e.sitio_web, e.visitas, e.created_at
+                   e.telefono, e.email_contacto, e.contacto_nombre, e.sitio_web, COALESCE(e.visitas, 0) AS visitas, e.created_at
             FROM empresas e ORDER BY e.nombre
         ");
-        $datos = $stmt->fetchAll();
+        $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $filename = 'empresas_' . date('Y-m-d') . '.csv';
         $headers = ['Nombre', 'Razón Social', 'CUIT', 'Rubro', 'Estado', 'Ubicación', 'Dirección', 'Teléfono', 'Email', 'Contacto', 'Sitio Web', 'Visitas', 'Fecha Alta'];
     } elseif ($exportar === 'formularios') {

@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         } catch (Exception $e) {
-            error_log("Error en formulario: " . $e->getMessage());
+            error_log("Error en formulario empresa_id=" . ($empresa_id ?? '') . ": " . $e->getMessage());
             $error = 'Error al procesar el formulario. Intente nuevamente.';
         }
     }

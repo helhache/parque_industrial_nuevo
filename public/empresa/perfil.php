@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nombre = trim($_POST['nombre'] ?? '');
             $razon_social = trim($_POST['razon_social'] ?? '');
             $cuit = trim($_POST['cuit'] ?? '');
-            $rubro = trim($_POST['rubro'] ?? '');
+            $rubro = trim($_POST['rubro'] ?? '') ?: null;
             $descripcion = trim($_POST['descripcion'] ?? '');
             $ubicacion = trim($_POST['ubicacion'] ?? '');
             $direccion = trim($_POST['direccion'] ?? '');
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         } catch (Exception $e) {
-            error_log("Error al actualizar perfil: " . $e->getMessage());
+            error_log("Error al actualizar perfil empresa_id=$empresa_id: " . $e->getMessage());
             $error = 'Error al guardar los cambios. Intente nuevamente.';
         }
     }
@@ -338,13 +338,14 @@ try {
                         <div class="card-body text-center">
                             <div class="mb-3">
                                 <?php
-                                $logo_src = PUBLIC_URL . '/img/placeholder-logo.png';
+                                $logo_src = '';
                                 if (!empty($empresa['logo'])) {
                                     $logo_src = UPLOADS_URL . '/logos/' . $empresa['logo'];
+                                } else {
+                                    $logo_src = 'data:image/svg+xml,' . rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect fill="#e9ecef" width="120" height="120"/><text x="60" y="68" font-size="48" fill="#6c757d" text-anchor="middle">🏢</text></svg>');
                                 }
                                 ?>
-                                <img id="logoPreview" src="<?= e($logo_src) ?>"
-                                     alt="Logo" class="img-fluid rounded" style="max-height: 150px; background: #f8f9fa;">
+                                <img id="logoPreview" src="<?= $logo_src ?>" alt="Logo" class="img-fluid rounded d-block mx-auto" style="max-height: 150px; background: #f8f9fa;">
                             </div>
                             <input type="file" name="logo" class="form-control" accept="image/*">
                             <small class="text-muted">JPG, PNG. Máx 2MB.</small>

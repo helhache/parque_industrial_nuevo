@@ -242,11 +242,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (typeof L !== 'undefined' && document.getElementById('mapaParquePolygono')) {
         var centroParque = [-28.4696, -65.7795];
-        var poligonoParque = [[-28.4765, -65.7870], [-28.4760, -65.7715], [-28.4635, -65.7710], [-28.4630, -65.7865], [-28.4765, -65.7870]];
-        var mapParque = L.map('mapaParquePolygono').setView(centroParque, 14);
+        var mapParque = L.map('mapaParquePolygono').setView(centroParque, 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapParque);
-        var polygon = L.polygon(poligonoParque, { color: '#1a5276', fillColor: '#1a5276', fillOpacity: 0.25, weight: 3 }).addTo(mapParque).bindPopup('<strong>Parque Industrial El Pantanillo</strong><br>Catamarca, Argentina');
-        mapParque.fitBounds(polygon.getBounds());
+        L.marker(centroParque).addTo(mapParque).bindPopup('<strong>Parque Industrial El Pantanillo</strong><br>Catamarca, Argentina');
         setTimeout(function() { mapParque.invalidateSize(); }, 300);
     }
 });
