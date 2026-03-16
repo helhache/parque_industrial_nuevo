@@ -154,6 +154,7 @@ $mostrar_form = isset($_GET['nueva']) || $editando;
             <a href="perfil.php"><i class="bi bi-building"></i> Mi Perfil</a>
             <a href="publicaciones.php" class="active"><i class="bi bi-megaphone"></i> Publicaciones</a>
             <a href="formularios.php"><i class="bi bi-file-earmark-text"></i> Formularios</a>
+            <a href="mensajes.php"><i class="bi bi-envelope"></i> Mensajes</a>
             <a href="notificaciones.php"><i class="bi bi-bell"></i> Notificaciones</a>
             <hr class="my-3 border-secondary">
             <a href="<?= PUBLIC_URL ?>/" target="_blank"><i class="bi bi-globe"></i> Ver sitio público</a>
@@ -260,6 +261,9 @@ $mostrar_form = isset($_GET['nueva']) || $editando;
                             $estado_badge = ['borrador' => 'bg-secondary', 'pendiente' => 'bg-warning text-dark', 'aprobado' => 'bg-success', 'rechazado' => 'bg-danger'];
                             ?>
                             <span class="badge <?= $estado_badge[$pub['estado']] ?? 'bg-secondary' ?>"><?= ucfirst($pub['estado']) ?></span>
+                            <?php if ($pub['estado'] === 'rechazado' && !empty($pub['motivo_rechazo'])): ?>
+                                <br><small class="text-danger">Motivo: <?= e(truncate($pub['motivo_rechazo'], 60)) ?></small>
+                            <?php endif; ?>
                         </td>
                         <td><small><?= format_datetime($pub['created_at']) ?></small></td>
                         <td>

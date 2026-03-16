@@ -359,6 +359,30 @@ function safe_json_encode($data) {
 }
 
 /**
+ * Enviar email con credenciales de acceso a una empresa recién registrada.
+ * Usa mail() de PHP. Requiere servidor de correo configurado.
+ * @return bool true si se envió, false si falló
+ */
+function enviar_email_credenciales_empresa($destino_email, $nombre_empresa, $password_temporal, $url_login = '') {
+    $asunto = 'Credenciales de acceso - Parque Industrial';
+    $url_login = $url_login ?: (defined('EMPRESA_URL') ? EMPRESA_URL . '/../login.php' : '');
+    $cuerpo = "Estimado/a,\n\n";
+    $cuerpo .= "Se ha registrado a su empresa \"$nombre_empresa\" en el sistema del Parque Industrial.\n\n";
+    $cuerpo .= "Sus credenciales de acceso son:\n";
+    $cuerpo .= "  Email: $destino_email\n";
+    $cuerpo .= "  Contraseña temporal: $password_temporal\n\n";
+    $cuerpo .= "Le recomendamos cambiar la contraseña al primer ingreso.\n\n";
+    if ($url_login) {
+        $cuerpo .= "Acceso al panel: $url_login\n\n";
+    }
+    $cuerpo .= "Saludos cordiales,\nMinisterio - Parque Industrial";
+    $headers = "From: noreply@parqueindustrial.gob.ar\r\n";
+    $headers .= "Reply-To: noreply@parqueindustrial.gob.ar\r\n";
+    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+    return @mail($destino_email, $asunto, $cuerpo, $headers);
+}
+
+/**
  * Paginación
  */
 function paginate($total, $per_page, $current_page, $url_pattern) {

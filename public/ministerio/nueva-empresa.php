@@ -86,6 +86,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     log_activity('empresa_registrada', 'empresas', $empresa_id);
 
                     $mensaje = "Empresa registrada correctamente. Credenciales de acceso: Email: $email_usuario / Contraseña temporal: $temp_password";
+                    if (!empty($_POST['enviar_credenciales_email'])) {
+                        $url_login = defined('PUBLIC_URL') ? (PUBLIC_URL . '/login.php') : '';
+                        if (enviar_email_credenciales_empresa($email_usuario, $nombre, $temp_password, $url_login)) {
+                            $mensaje .= " Se envió un email con las credenciales al usuario.";
+                        } else {
+                            $mensaje .= " No se pudo enviar el email (revise la configuración del servidor); las credenciales se muestran aquí.";
+                        }
+                    }
                 }
             }
         } catch (Exception $e) {
@@ -123,6 +131,7 @@ $ubicaciones = $db->query("SELECT nombre FROM ubicaciones WHERE activo = 1 ORDER
             <a href="graficos.php"><i class="bi bi-graph-up"></i> Gráficos y Datos</a>
             <a href="publicaciones.php"><i class="bi bi-megaphone"></i> Publicaciones</a>
             <a href="banners.php"><i class="bi bi-images"></i> Banners inicio</a>
+            <a href="comunicados.php"><i class="bi bi-send"></i> Enviar comunicados</a>
             <a href="notificaciones.php"><i class="bi bi-bell"></i> Notificaciones</a>
             <a href="exportar.php"><i class="bi bi-download"></i> Exportar</a>
             <hr class="my-3 border-secondary">
@@ -242,6 +251,10 @@ $ubicaciones = $db->query("SELECT nombre FROM ubicaciones WHERE activo = 1 ORDER
                             <div class="form-check mb-2">
                                 <input type="checkbox" name="solicitar_formulario" class="form-check-input" id="solicitarForm" checked>
                                 <label class="form-check-label" for="solicitarForm">Solicitar completar formulario</label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="enviar_credenciales_email" class="form-check-input" id="enviarEmail" checked>
+                                <label class="form-check-label" for="enviarEmail">Enviar credenciales por email al usuario</label>
                             </div>
                             <div class="form-check">
                                 <input type="checkbox" name="perfil_publico" class="form-check-input" id="perfilPublico">

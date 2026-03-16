@@ -18,8 +18,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verify_csrf($_POST[CSRF_TOKEN_NAME]
         $nuevo_estado = ($accion === 'aprobar') ? 'aprobado' : 'rechazado';
         $observaciones = trim($_POST['observaciones'] ?? '');
 
-        $stmt = $db->prepare("UPDATE publicaciones SET estado = ? WHERE id = ?");
-        $stmt->execute([$nuevo_estado, $pub_id]);
+        if ($accion === 'aprobar') {
+            $stmt = $db->prepare("UPDATE publicaciones SET estado = ?, aprobado_por = ?, fecha_aprobacion = NOW(), motivo_rechazo = NULL WHERE id = ?");
+            $stmt->execute([$nuevo_estado, $_SESSION['user_id'], $pub_id]);
+        } else {
+            $stmt = $db->prepare("UPDATE publicaciones SET estado = ?, motivo_rechazo = ? WHERE id = ?");
+            $stmt->execute([$nuevo_estado, $observaciones ?: null, $pub_id]);
+        }
 
         // Notificar a la empresa
         $stmt = $db->prepare("SELECT p.titulo, p.empresa_id, e.usuario_id FROM publicaciones p INNER JOIN empresas e ON p.empresa_id = e.id WHERE p.id = ?");
@@ -104,6 +109,7 @@ $publicaciones = $stmt->fetchAll();
             <a href="graficos.php"><i class="bi bi-graph-up"></i> Gráficos y Datos</a>
             <a href="publicaciones.php" class="active"><i class="bi bi-megaphone"></i> Publicaciones</a>
             <a href="banners.php"><i class="bi bi-images"></i> Banners inicio</a>
+            <a href="comunicados.php"><i class="bi bi-send"></i> Enviar comunicados</a>
             <a href="notificaciones.php"><i class="bi bi-bell"></i> Notificaciones</a>
             <a href="exportar.php"><i class="bi bi-download"></i> Exportar</a>
             <hr class="my-3 border-secondary">
