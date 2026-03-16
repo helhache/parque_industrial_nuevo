@@ -30,6 +30,10 @@ try {
     $total_empresas = 0;
 }
 
+$visibles_json = get_config('estadisticas_visibles', '["header","rubros_pie","rubros_barras","ubicacion","resumen","distribucion","info"]');
+$visibles = json_decode($visibles_json, true);
+if (!is_array($visibles)) $visibles = ['header', 'rubros_pie', 'rubros_barras', 'ubicacion', 'resumen', 'distribucion', 'info'];
+
 require_once BASEPATH . '/includes/header.php';
 ?>
 
@@ -46,6 +50,7 @@ require_once BASEPATH . '/includes/header.php';
 .progress-custom .count { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-weight: 600; color: #333; }
 </style>
 
+<?php if (in_array('header', $visibles)): ?>
 <div class="stats-header">
     <div class="container">
         <div class="row align-items-center">
@@ -66,19 +71,20 @@ require_once BASEPATH . '/includes/header.php';
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <section class="section">
     <div class="container">
         <div class="row g-4">
-            <!-- Empresas por Rubro - Torta -->
+            <?php if (in_array('rubros_pie', $visibles)): ?>
             <div class="col-lg-6">
                 <div class="chart-box h-100">
                     <div class="chart-title"><i class="bi bi-pie-chart me-2"></i>INDUSTRIAS POR SECTOR</div>
                     <canvas id="chartRubrosPie" height="280"></canvas>
                 </div>
             </div>
-            
-            <!-- Empresas por Rubro - Barras -->
+            <?php endif; ?>
+            <?php if (in_array('rubros_barras', $visibles)): ?>
             <div class="col-lg-6">
                 <div class="chart-box h-100">
                     <div class="chart-title"><i class="bi bi-bar-chart me-2"></i>DISTRIBUCIÓN POR RUBRO</div>
@@ -92,8 +98,8 @@ require_once BASEPATH . '/includes/header.php';
                     <?php endforeach; ?>
                 </div>
             </div>
-            
-            <!-- Por Ubicación -->
+            <?php endif; ?>
+            <?php if (in_array('ubicacion', $visibles)): ?>
             <div class="col-lg-4">
                 <div class="chart-box h-100">
                     <div class="chart-title"><i class="bi bi-geo-alt me-2"></i>POR UBICACIÓN</div>
@@ -108,8 +114,8 @@ require_once BASEPATH . '/includes/header.php';
                     <?php endforeach; ?>
                 </div>
             </div>
-            
-            <!-- Resumen numérico -->
+            <?php endif; ?>
+            <?php if (in_array('resumen', $visibles)): ?>
             <div class="col-lg-4">
                 <div class="chart-box h-100">
                     <div class="chart-title"><i class="bi bi-clipboard-data me-2"></i>RESUMEN</div>
@@ -141,16 +147,16 @@ require_once BASEPATH . '/includes/header.php';
                     </div>
                 </div>
             </div>
-            
-            <!-- Gráfico de ubicaciones -->
+            <?php endif; ?>
+            <?php if (in_array('distribucion', $visibles)): ?>
             <div class="col-lg-4">
                 <div class="chart-box h-100">
                     <div class="chart-title"><i class="bi bi-pin-map me-2"></i>DISTRIBUCIÓN GEOGRÁFICA</div>
                     <canvas id="chartUbicaciones" height="200"></canvas>
                 </div>
             </div>
-            
-            <!-- Información adicional -->
+            <?php endif; ?>
+            <?php if (in_array('info', $visibles)): ?>
             <div class="col-12">
                 <div class="chart-box">
                     <div class="chart-title"><i class="bi bi-info-circle me-2"></i>SOBRE ESTOS DATOS</div>
@@ -161,6 +167,7 @@ require_once BASEPATH . '/includes/header.php';
                     </p>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 </section>
@@ -170,9 +177,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const rubrosData = <?= json_encode($rubros_data) ?>;
     const ubicacionesData = <?= json_encode($ubicaciones_data) ?>;
     
-    // Gráfico Torta Rubros
-    if (rubrosData.length > 0) {
-        new Chart(document.getElementById('chartRubrosPie'), {
+    const rubrosPieEl = document.getElementById('chartRubrosPie');
+    if (rubrosPieEl && rubrosData.length > 0) {
+        new Chart(rubrosPieEl, {
             type: 'doughnut',
             data: {
                 labels: rubrosData.map(r => r.nombre),
@@ -193,9 +200,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Gráfico Ubicaciones
-    if (ubicacionesData.length > 0) {
-        new Chart(document.getElementById('chartUbicaciones'), {
+    const ubicacionesEl = document.getElementById('chartUbicaciones');
+    if (ubicacionesEl && ubicacionesData.length > 0) {
+        new Chart(ubicacionesEl, {
             type: 'pie',
             data: {
                 labels: ubicacionesData.map(u => u.nombre),

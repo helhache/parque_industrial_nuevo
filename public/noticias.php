@@ -34,7 +34,7 @@ $pagination = paginate($total, ITEMS_PER_PAGE, $pagina, 'noticias.php?' . http_b
 $offset = ($pagination['current_page'] - 1) * ITEMS_PER_PAGE;
 
 $stmt = $db->prepare("
-    SELECT p.*, e.nombre as empresa_nombre, e.logo
+    SELECT p.*, e.id as empresa_id, e.nombre as empresa_nombre, e.logo
     FROM publicaciones p
     LEFT JOIN empresas e ON p.empresa_id = e.id
     $where_sql
@@ -43,6 +43,41 @@ $stmt = $db->prepare("
 ");
 $stmt->execute($params);
 $publicaciones = $stmt->fetchAll();
+
+// Toggle me gusta (GET para no romper navegación)
+if (isset($_GET['like'])) {
+    $like_id = (int)$_GET['like'];
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    try {
+        $stmt = $db->prepare("SELECT 1 FROM publicacion_likes WHERE publicacion_id = ? AND ip = ?");
+        $stmt->execute([$like_id, $ip]);
+        if ($stmt->fetch()) {
+            $db->prepare("DELETE FROM publicacion_likes WHERE publicacion_id = ? AND ip = ?")->execute([$like_id, $ip]);
+        } else {
+            $db->prepare("INSERT IGNORE INTO publicacion_likes (publicacion_id, ip) VALUES (?, ?)")->execute([$like_id, $ip]);
+        }
+    } catch (Exception $e) { /* tabla puede no existir */ }
+    header('Location: ' . PUBLIC_URL . '/noticias.php?' . http_build_query(array_diff_key($_GET, ['like' => 1])));
+    exit;
+}
+
+$likes_count = [];
+$likes_ya = [];
+try {
+    foreach ($publicaciones as $p) {
+        $stmt = $db->prepare("SELECT COUNT(*) FROM publicacion_likes WHERE publicacion_id = ?");
+        $stmt->execute([$p['id']]);
+        $likes_count[$p['id']] = (int) $stmt->fetchColumn();
+    }
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    $ids = array_column($publicaciones, 'id');
+    if (!empty($ids)) {
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $db->prepare("SELECT publicacion_id FROM publicacion_likes WHERE publicacion_id IN ($placeholders) AND ip = ?");
+        $stmt->execute(array_merge($ids, [$ip]));
+        $likes_ya = array_column($stmt->fetchAll(), 'publicacion_id');
+    }
+} catch (Exception $e) { }
 
 include __DIR__ . '/../includes/header.php';
 ?>
@@ -80,11 +115,18 @@ include __DIR__ . '/../includes/header.php';
         </div>
         <?php else: ?>
         <div class="row g-4">
-            <?php foreach ($publicaciones as $pub): ?>
+            <?php foreach ($publicaciones as $pub): 
+                $img_src = '';
+                if (!empty($pub['imagen'])) {
+                    $img_src = (strpos($pub['imagen'], 'http') === 0) ? $pub['imagen'] : (UPLOADS_URL . '/publicaciones/' . $pub['imagen']);
+                }
+                $num_likes = $likes_count[$pub['id']] ?? 0;
+                $ya_like = in_array($pub['id'], $likes_ya);
+            ?>
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100 shadow-sm">
-                    <?php if ($pub['imagen']): ?>
-                    <img src="<?= UPLOADS_URL ?>/publicaciones/<?= e($pub['imagen']) ?>" class="card-img-top" style="height: 200px; object-fit: cover;" alt="">
+                    <?php if ($img_src): ?>
+                    <img src="<?= e($img_src) ?>" class="card-img-top" style="height: 200px; object-fit: cover;" alt="">
                     <?php else: ?>
                     <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
                         <i class="bi bi-newspaper display-4 text-muted"></i>
@@ -98,13 +140,22 @@ include __DIR__ . '/../includes/header.php';
                         <h5 class="card-title"><?= e($pub['titulo']) ?></h5>
                         <p class="card-text"><?= e(truncate($pub['extracto'] ?: $pub['contenido'], 120)) ?></p>
                     </div>
-                    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
-                        <small class="text-muted">
-                            <?php if ($pub['empresa_nombre']): ?>
-                            <i class="bi bi-building me-1"></i><?= e($pub['empresa_nombre']) ?>
-                            <?php endif; ?>
-                        </small>
-                        <small class="text-muted"><?= format_date($pub['created_at']) ?></small>
+                    <div class="card-footer bg-white">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <small class="text-muted">
+                                <?php if (!empty($pub['empresa_nombre'])): ?>
+                                <i class="bi bi-building me-1"></i><?= e($pub['empresa_nombre']) ?>
+                                <?php endif; ?>
+                                · <?= format_date($pub['created_at']) ?>
+                            </small>
+                            <div class="d-flex gap-2">
+                                <a href="<?= PUBLIC_URL ?>/publicacion.php?slug=<?= e(urlencode($pub['slug'])) ?>" class="btn btn-sm btn-outline-primary">Ver más</a>
+                                <?php if (!empty($pub['empresa_id'])): ?>
+                                <a href="<?= PUBLIC_URL ?>/empresa.php?id=<?= (int)$pub['empresa_id'] ?>" class="btn btn-sm btn-outline-secondary">Ver empresa</a>
+                                <?php endif; ?>
+                                <a href="noticias.php?<?= http_build_query(array_merge($_GET, ['like' => $pub['id']])) ?>" class="btn btn-sm btn-outline-danger" title="Me gusta"><i class="bi bi-heart<?= $ya_like ? '-fill' : '' ?>"></i> <?= $num_likes ?: '' ?></a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -36,7 +36,7 @@ $current_page = basename($_SERVER['PHP_SELF'], '.php');
     <?= $extra_css ?>
     <?php endif; ?>
 </head>
-<body>
+<body<?= isset($body_class) && $body_class ? ' class="' . e($body_class) . '"' : '' ?>>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-main">
         <div class="container">

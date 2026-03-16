@@ -1,6 +1,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
+            <?php if (empty($compact_footer)): ?>
             <div class="row">
                 <div class="col-lg-4 mb-4">
                     <h5>Parque Industrial de Catamarca</h5>
@@ -34,6 +35,7 @@
                     <img src="<?= PUBLIC_URL ?>/img/logo-gobierno.png" alt="Gobierno de Catamarca" style="max-height: 50px; opacity: 0.8;" onerror="this.style.display='none'">
                 </div>
             </div>
+            <?php endif; ?>
             <div class="footer-bottom">
                 <p class="mb-0">&copy; <?= date('Y') ?> Parque Industrial de Catamarca - Todos los derechos reservados</p>
             </div>

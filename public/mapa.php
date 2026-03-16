@@ -15,22 +15,7 @@ try {
     $total = count($empresas);
     $rubros_unicos = count(array_unique(array_column($empresas, 'rubro')));
     
-    // Asignar coordenadas aproximadas a empresas sin coordenadas
-    $base_lat = -28.4696;
-    $base_lng = -65.7795;
-    $offset = 0;
-    
-    foreach ($empresas as &$emp) {
-        if (empty($emp['latitud']) || empty($emp['longitud'])) {
-            // Generar coordenadas en espiral alrededor del centro
-            $angle = $offset * 0.5;
-            $radius = 0.002 + ($offset * 0.0003);
-            $emp['latitud'] = $base_lat + ($radius * cos($angle));
-            $emp['longitud'] = $base_lng + ($radius * sin($angle));
-            $offset++;
-        }
-    }
-    unset($emp);
+    // Solo ubicaciones reales: no se inventan coordenadas; las empresas sin lat/long no tendrán marcador
     
 } catch (Exception $e) {
     $empresas = [];
@@ -38,14 +23,19 @@ try {
     $rubros_unicos = 0;
 }
 
+$body_class = 'page-mapa';
+$compact_footer = true;
 require_once BASEPATH . '/includes/header.php';
 ?>
 
 <style>
-.map-page { display: flex; flex-wrap: wrap; min-height: calc(100vh - 76px); }
-.map-panel-left { width: 320px; background: #fff; box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 10; display: flex; flex-direction: column; max-height: calc(100vh - 76px); }
-.map-panel-right { flex: 1; position: relative; }
-#mapFull { width: 100%; height: 100%; min-height: 500px; }
+body.page-mapa .footer { padding: 0.75rem 0; margin-top: 0; }
+body.page-mapa .footer .row { display: none; }
+body.page-mapa .footer-bottom { margin-top: 0; }
+.map-page { display: flex; flex-wrap: wrap; min-height: calc(100vh - 70px); }
+.map-panel-left { width: 300px; background: #fff; box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 10; display: flex; flex-direction: column; max-height: calc(100vh - 70px); }
+.map-panel-right { flex: 1; position: relative; min-height: calc(100vh - 70px); }
+#mapFull { width: 100%; height: 100%; min-height: calc(100vh - 70px); }
 .panel-header { background: var(--primary); color: #fff; padding: 20px; }
 .panel-header h4 { margin: 0; font-size: 1.1rem; }
 .panel-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
@@ -103,16 +93,18 @@ require_once BASEPATH . '/includes/header.php';
         </div>
         
         <div class="empresa-list" id="empresaList">
-            <?php foreach ($empresas as $emp): ?>
-            <div class="empresa-list-item" 
+            <?php foreach ($empresas as $emp): 
+                $tiene_coords = !empty($emp['latitud']) && !empty($emp['longitud']);
+            ?>
+            <div class="empresa-list-item <?= $tiene_coords ? '' : 'sin-mapa' ?>" 
                  data-id="<?= $emp['id'] ?>" 
-                 data-lat="<?= $emp['latitud'] ?>" 
-                 data-lng="<?= $emp['longitud'] ?>"
+                 data-lat="<?= $emp['latitud'] ?? '' ?>" 
+                 data-lng="<?= $emp['longitud'] ?? '' ?>"
                  data-rubro="<?= e($emp['rubro'] ?? '') ?>"
                  data-nombre="<?= e(strtolower($emp['nombre'])) ?>">
                 <div class="nombre"><?= e($emp['nombre']) ?></div>
                 <div class="rubro"><?= e($emp['rubro'] ?? 'Sin rubro') ?></div>
-                <div class="ubicacion"><i class="bi bi-geo-alt"></i> <?= e($emp['ubicacion'] ?? '-') ?></div>
+                <div class="ubicacion"><i class="bi bi-geo-alt"></i> <?= e($emp['ubicacion'] ?? '-') ?><?= !$tiene_coords ? ' <small class="text-muted">(sin ubicación en mapa)</small>' : '' ?></div>
             </div>
             <?php endforeach; ?>
         </div>
@@ -193,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             document.querySelectorAll('.empresa-list-item').forEach(i => i.classList.remove('active'));
-            this.classList.add('active');
+            if (lat && lng) this.classList.add('active');
         });
     });
     

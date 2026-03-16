@@ -62,6 +62,9 @@ $actividad = $db->query("
             <a href="publicaciones.php"><i class="bi bi-megaphone"></i> Publicaciones</a>
             <a href="banners.php"><i class="bi bi-images"></i> Banners inicio</a>
             <a href="comunicados.php"><i class="bi bi-send"></i> Enviar comunicados</a>
+            <a href="nosotros-editar.php"><i class="bi bi-pencil-square"></i> Página Nosotros</a>
+            <a href="estadisticas-config.php"><i class="bi bi-bar-chart"></i> Estadísticas públicas</a>
+            <a href="solicitudes-proyecto.php"><i class="bi bi-inbox"></i> Solicitudes proyecto</a>
             <a href="notificaciones.php"><i class="bi bi-bell"></i> Notificaciones</a>
             <a href="exportar.php"><i class="bi bi-download"></i> Exportar</a>
             <hr class="my-3 border-secondary">
