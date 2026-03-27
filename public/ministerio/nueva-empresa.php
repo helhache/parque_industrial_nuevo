@@ -22,6 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rubro = trim($_POST['rubro'] ?? '');
             $ubicacion = trim($_POST['ubicacion'] ?? '');
             $direccion = trim($_POST['direccion'] ?? '');
+            $latitud = !empty($_POST['latitud']) ? (float)$_POST['latitud'] : null;
+            $longitud = !empty($_POST['longitud']) ? (float)$_POST['longitud'] : null;
             $contacto_nombre = trim($_POST['contacto_nombre'] ?? '');
             $telefono = trim($_POST['telefono'] ?? '');
             $email_contacto = trim($_POST['email_contacto'] ?? '');
@@ -60,12 +62,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Crear empresa
                     $stmt = $db->prepare("
                         INSERT INTO empresas (usuario_id, nombre, razon_social, cuit, rubro, ubicacion, direccion,
-                            contacto_nombre, telefono, email_contacto, sitio_web, estado)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            latitud, longitud, contacto_nombre, telefono, email_contacto, sitio_web, estado)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ");
                     $stmt->execute([
                         $usuario_id, $nombre, $razon_social, $cuit, $rubro, $ubicacion, $direccion,
-                        $contacto_nombre, $telefono, $email_contacto, $sitio_web, $estado
+                        $latitud, $longitud, $contacto_nombre, $telefono, $email_contacto, $sitio_web, $estado
                     ]);
 
                     $empresa_id = $db->lastInsertId();
@@ -199,6 +201,19 @@ $ubicaciones = $db->query("SELECT nombre FROM ubicaciones WHERE activo = 1 ORDER
                                     <label class="form-label">Dirección</label>
                                     <input type="text" name="direccion" class="form-control" value="<?= e($_POST['direccion'] ?? '') ?>">
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Latitud</label>
+                                    <input type="number" name="latitud" id="latitud" class="form-control" step="any" value="<?= e($_POST['latitud'] ?? '') ?>">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Longitud</label>
+                                    <input type="number" name="longitud" id="longitud" class="form-control" step="any" value="<?= e($_POST['longitud'] ?? '') ?>">
+                                </div>
+                                <div class="col-12">
+                                    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+                                    <div id="mapNueva" style="height: 300px; border-radius: 8px;"></div>
+                                    <small class="text-muted">Haga clic en el mapa para fijar la ubicación de la empresa</small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -282,5 +297,27 @@ $ubicaciones = $db->query("SELECT nombre FROM ubicaciones WHERE activo = 1 ORDER
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('mapNueva').setView([<?= MAP_DEFAULT_LAT ?>, <?= MAP_DEFAULT_LNG ?>], <?= MAP_DEFAULT_ZOOM ?>);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        let marker = null;
+
+        map.on('click', function(e) {
+            if (marker) {
+                marker.setLatLng(e.latlng);
+            } else {
+                marker = L.marker(e.latlng, {draggable: true}).addTo(map);
+                marker.on('dragend', function(ev) {
+                    const pos = ev.target.getLatLng();
+                    document.getElementById('latitud').value = pos.lat.toFixed(6);
+                    document.getElementById('longitud').value = pos.lng.toFixed(6);
+                });
+            }
+            document.getElementById('latitud').value = e.latlng.lat.toFixed(6);
+            document.getElementById('longitud').value = e.latlng.lng.toFixed(6);
+        });
+    </script>
 </body>
 </html>
