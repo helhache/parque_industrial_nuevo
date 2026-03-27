@@ -36,8 +36,8 @@ try {
     $stmt->execute($params);
     $total = $stmt->fetch()['total'];
     
-    $offset = ($pagina - 1) * $por_pagina;
-    $stmt = $db->prepare("SELECT * FROM empresas WHERE $where_sql ORDER BY nombre ASC LIMIT $por_pagina OFFSET $offset");
+    $offset = (int)(($pagina - 1) * $por_pagina);
+    $stmt = $db->prepare("SELECT * FROM empresas WHERE $where_sql ORDER BY nombre ASC LIMIT " . (int)$por_pagina . " OFFSET " . $offset);
     $stmt->execute($params);
     $empresas = $stmt->fetchAll();
     

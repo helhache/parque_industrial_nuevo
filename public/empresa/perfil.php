@@ -55,6 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$empresa_id]);
             $datos_anteriores = $stmt->fetch();
 
+            if (!$datos_anteriores) {
+                set_flash('error', 'Empresa no encontrada');
+                redirect('dashboard.php');
+            }
+
             // Sanitizar inputs
             $nombre = trim($_POST['nombre'] ?? '');
             $razon_social = trim($_POST['razon_social'] ?? '');

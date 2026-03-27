@@ -41,12 +41,20 @@ $notificaciones = $stmt->fetchAll();
 
 $visitas_semana = [];
 $labels_semana = [];
-for ($i = 6; $i >= 0; $i--) {
-    $fecha = date('Y-m-d', strtotime("-$i days"));
-    $labels_semana[] = date('D', strtotime($fecha));
-    $stmt = $db->prepare("SELECT COUNT(*) FROM visitas_empresa WHERE empresa_id = ? AND DATE(created_at) = ?");
-    $stmt->execute([$empresa_id, $fecha]);
-    $visitas_semana[] = $stmt->fetchColumn();
+try {
+    for ($i = 6; $i >= 0; $i--) {
+        $fecha = date('Y-m-d', strtotime("-$i days"));
+        $labels_semana[] = date('D', strtotime($fecha));
+        $stmt = $db->prepare("SELECT COUNT(*) FROM visitas_empresa WHERE empresa_id = ? AND DATE(created_at) = ?");
+        $stmt->execute([$empresa_id, $fecha]);
+        $visitas_semana[] = (int)$stmt->fetchColumn();
+    }
+} catch (Exception $e) {
+    for ($i = 6; $i >= 0; $i--) {
+        $fecha = date('Y-m-d', strtotime("-$i days"));
+        $labels_semana[] = date('D', strtotime($fecha));
+        $visitas_semana[] = 0;
+    }
 }
 ?>
 <!DOCTYPE html>

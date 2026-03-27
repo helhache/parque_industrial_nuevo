@@ -82,7 +82,7 @@ include __DIR__ . '/../includes/header.php';
                                 </div>
                                 <div class="col-12">
                                     <div class="form-check">
-                                        <input type="checkbox" name="solicita_cita" class="form-check-input" id="solicita_cita" value="1" <?= isset($_POST['solicita_cita']) ? 'checked' : 'checked' ?>>
+                                        <input type="checkbox" name="solicita_cita" class="form-check-input" id="solicita_cita" value="1" <?= isset($_POST['solicita_cita']) ? 'checked' : '' ?>>
                                         <label class="form-check-label" for="solicita_cita">Solicitar cita presencial con el encargado del ministerio</label>
                                     </div>
                                 </div>

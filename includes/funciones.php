@@ -379,7 +379,11 @@ function enviar_email_credenciales_empresa($destino_email, $nombre_empresa, $pas
     $headers = "From: noreply@parqueindustrial.gob.ar\r\n";
     $headers .= "Reply-To: noreply@parqueindustrial.gob.ar\r\n";
     $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    return @mail($destino_email, $asunto, $cuerpo, $headers);
+    $enviado = mail($destino_email, $asunto, $cuerpo, $headers);
+    if (!$enviado) {
+        error_log("enviar_credenciales: fallo al enviar email a $destino_email");
+    }
+    return $enviado;
 }
 
 /**

@@ -90,7 +90,7 @@ require_once BASEPATH . '/includes/header.php';
                     <div class="chart-title"><i class="bi bi-bar-chart me-2"></i>DISTRIBUCIÓN POR RUBRO</div>
                     <?php foreach ($rubros_data as $rubro): ?>
                     <div class="progress-custom">
-                        <div class="bar" style="width: <?= min(100, ($rubro['total_empresas'] / $total_empresas * 100)) ?>%; background: <?= $rubro['color'] ?? '#3498db' ?>;">
+                        <div class="bar" style="width: <?= $total_empresas > 0 ? min(100, ($rubro['total_empresas'] / $total_empresas * 100)) : 0 ?>%; background: <?= $rubro['color'] ?? '#3498db' ?>;">
                             <?= e($rubro['nombre']) ?>
                         </div>
                         <span class="count"><?= $rubro['total_empresas'] ?></span>
@@ -109,7 +109,7 @@ require_once BASEPATH . '/includes/header.php';
                         <span class="badge bg-primary"><?= $ub['total'] ?></span>
                     </div>
                     <div class="progress mb-3" style="height: 8px;">
-                        <div class="progress-bar" style="width: <?= ($ub['total'] / $total_empresas * 100) ?>%;"></div>
+                        <div class="progress-bar" style="width: <?= $total_empresas > 0 ? ($ub['total'] / $total_empresas * 100) : 0 ?>%;"></div>
                     </div>
                     <?php endforeach; ?>
                 </div>

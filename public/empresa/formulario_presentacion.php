@@ -31,7 +31,7 @@ if (!$formulario) {
 }
 
 if ($formulario) {
-    header('Location: formulario_dinamico.php?id=' . (int)$formulario['id']);
+    header('Location: ' . EMPRESA_URL . '/formulario_dinamico.php?id=' . (int)$formulario['id']);
     exit;
 } else {
     $error = 'El formulario de presentación aún no fue configurado por el Ministerio.';

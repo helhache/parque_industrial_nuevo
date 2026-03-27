@@ -25,8 +25,8 @@ if (is_readable($env_file)) {
         if ($value === '') {
             continue;
         }
-        $first = isset($value[0]) ? $value[0] : '';
-        $last = isset($value[strlen($value) - 1]) ? $value[strlen($value) - 1] : '';
+        $first = $value[0] ?? '';
+        $last = $value[strlen($value) - 1] ?? '';
         if (($first === '"' && $last === '"') || ($first === "'" && $last === "'")) {
             $value = substr($value, 1, -1);
         }

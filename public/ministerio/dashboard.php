@@ -9,36 +9,57 @@ if (!$auth->requireRole(['ministerio', 'admin'], PUBLIC_URL . '/login.php')) exi
 $page_title = 'Dashboard Ministerio';
 $db = getDB();
 
-$stats = [];
-$stats['empresas_activas'] = $db->query("SELECT COUNT(*) FROM empresas WHERE estado = 'activa'")->fetchColumn();
-$stats['empresas_pendientes'] = $db->query("SELECT COUNT(*) FROM empresas WHERE estado = 'pendiente'")->fetchColumn();
-$stats['formularios_pendientes'] = $db->query("SELECT COUNT(*) FROM datos_empresa WHERE estado = 'enviado'")->fetchColumn();
-$stats['publicaciones_revision'] = $db->query("SELECT COUNT(*) FROM publicaciones WHERE estado = 'pendiente'")->fetchColumn();
-$stats['total_empleados'] = $db->query("
-    SELECT COALESCE(SUM(de.dotacion_total), 0) FROM datos_empresa de
-    INNER JOIN (SELECT empresa_id, MAX(periodo) as max_periodo FROM datos_empresa WHERE estado IN ('enviado','aprobado') GROUP BY empresa_id) latest
-    ON de.empresa_id = latest.empresa_id AND de.periodo = latest.max_periodo
-")->fetchColumn();
-if ($stats['total_empleados'] == 0) {
-    $stats['total_empleados'] = $stats['empresas_activas'] * 15;
+$stats = [
+    'empresas_activas' => 0,
+    'empresas_pendientes' => 0,
+    'formularios_pendientes' => 0,
+    'publicaciones_revision' => 0,
+    'total_empleados' => 0,
+    'visitas_mes' => 0,
+];
+$rubros_data = [];
+$rubros_labels = [];
+$rubros_values = [];
+$actividad = [];
+
+try {
+    $stats['empresas_activas'] = $db->query("SELECT COUNT(*) FROM empresas WHERE estado = 'activa'")->fetchColumn();
+    $stats['empresas_pendientes'] = $db->query("SELECT COUNT(*) FROM empresas WHERE estado = 'pendiente'")->fetchColumn();
+    $stats['formularios_pendientes'] = $db->query("SELECT COUNT(*) FROM datos_empresa WHERE estado = 'enviado'")->fetchColumn();
+    $stats['publicaciones_revision'] = $db->query("SELECT COUNT(*) FROM publicaciones WHERE estado = 'pendiente'")->fetchColumn();
+    $stats['total_empleados'] = $db->query("
+        SELECT COALESCE(SUM(de.dotacion_total), 0) FROM datos_empresa de
+        INNER JOIN (SELECT empresa_id, MAX(periodo) as max_periodo FROM datos_empresa WHERE estado IN ('enviado','aprobado') GROUP BY empresa_id) latest
+        ON de.empresa_id = latest.empresa_id AND de.periodo = latest.max_periodo
+    ")->fetchColumn();
+    if ($stats['total_empleados'] == 0) {
+        $stats['total_empleados'] = $stats['empresas_activas'] * 15;
+    }
+
+    $rubros_data = $db->query("
+        SELECT rubro, COUNT(*) as total FROM empresas
+        WHERE rubro IS NOT NULL AND rubro != '' AND estado = 'activa'
+        GROUP BY rubro ORDER BY total DESC LIMIT 8
+    ")->fetchAll();
+    $rubros_labels = array_column($rubros_data, 'rubro');
+    $rubros_values = array_column($rubros_data, 'total');
+
+    $actividad = $db->query("
+        SELECT la.accion, la.created_at, u.email, e.nombre as empresa_nombre
+        FROM log_actividad la
+        LEFT JOIN usuarios u ON la.usuario_id = u.id
+        LEFT JOIN empresas e ON la.empresa_id = e.id
+        ORDER BY la.created_at DESC LIMIT 5
+    ")->fetchAll();
+} catch (Exception $e) {
+    error_log("Error en dashboard ministerio: " . $e->getMessage());
 }
-$stats['visitas_mes'] = $db->query("SELECT COUNT(*) FROM visitas_empresa WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)")->fetchColumn();
 
-$rubros_data = $db->query("
-    SELECT rubro, COUNT(*) as total FROM empresas
-    WHERE rubro IS NOT NULL AND rubro != '' AND estado = 'activa'
-    GROUP BY rubro ORDER BY total DESC LIMIT 8
-")->fetchAll();
-$rubros_labels = array_column($rubros_data, 'rubro');
-$rubros_values = array_column($rubros_data, 'total');
-
-$actividad = $db->query("
-    SELECT la.accion, la.created_at, u.email, e.nombre as empresa_nombre
-    FROM log_actividad la
-    LEFT JOIN usuarios u ON la.usuario_id = u.id
-    LEFT JOIN empresas e ON la.empresa_id = e.id
-    ORDER BY la.created_at DESC LIMIT 5
-")->fetchAll();
+try {
+    $stats['visitas_mes'] = $db->query("SELECT COUNT(*) FROM visitas_empresa WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)")->fetchColumn();
+} catch (Exception $e) {
+    $stats['visitas_mes'] = 0;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
