@@ -81,9 +81,14 @@ $respuestas = $stmt->fetchAll();
                     <p class="text-muted mb-0 small"><?= e($formulario['descripcion']) ?></p>
                 <?php endif; ?>
             </div>
-            <a href="formularios-dinamicos.php" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>Volver
-            </a>
+            <div class="d-flex gap-2">
+                <a href="formulario-imprimir.php?id=<?= $form_id ?>" target="_blank" class="btn btn-outline-secondary">
+                    <i class="bi bi-printer me-1"></i>Imprimir / PDF
+                </a>
+                <a href="formularios-dinamicos.php" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Volver
+                </a>
+            </div>
         </div>
 
         <div class="table-container mb-4">
@@ -147,18 +152,21 @@ $respuestas = $stmt->fetchAll();
                             </small>
                         </div>
                         <div class="row g-3">
-                            <?php foreach ($preguntas as $pid => $p): 
+                            <?php foreach ($preguntas as $pid => $p):
                                 $valor = $valores[$pid] ?? null;
-                                if (is_array($valor)) {
-                                    $valor_str = implode(', ', $valor);
-                                } else {
-                                    $valor_str = (string)$valor;
-                                }
                             ?>
                             <div class="col-12">
                                 <div class="border rounded p-2">
                                     <div class="small text-muted mb-1"><?= e($p['etiqueta']) ?></div>
-                                    <div><strong><?= $valor_str !== '' ? e($valor_str) : '-' ?></strong></div>
+                                    <?php if ($p['tipo'] === 'archivo' && !empty($valor)): ?>
+                                        <a href="<?= UPLOADS_URL ?>/formularios/<?= e($valor) ?>" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-paperclip me-1"></i><?= e($valor) ?>
+                                        </a>
+                                    <?php elseif (is_array($valor)): ?>
+                                        <strong><?= e(implode(', ', $valor)) ?: '-' ?></strong>
+                                    <?php else: ?>
+                                        <strong><?= ($valor !== null && $valor !== '') ? e((string)$valor) : '-' ?></strong>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <?php endforeach; ?>

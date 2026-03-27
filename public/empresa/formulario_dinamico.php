@@ -73,14 +73,26 @@ if (!$formulario) {
                     $tipo = $p['tipo'];
                     $requerido = (bool)$p['requerido'];
 
-                    $valor = $_POST[$campo_name] ?? null;
-
-                    if (is_array($valor)) {
-                        $valor = array_values(array_filter($valor, static function ($v) {
-                            return $v !== '' && $v !== null;
-                        }));
-                    } elseif ($tipo === 'checkbox') {
-                        $valor = isset($_POST[$campo_name]) ? 1 : 0;
+                    if ($tipo === 'archivo') {
+                        $valor = $valores_actuales[$p['id']] ?? null;
+                        if (!empty($_FILES[$campo_name]['name'])) {
+                            $allowed = ['image/jpeg','image/png','image/webp','application/pdf'];
+                            $res = upload_file($_FILES[$campo_name], 'formularios', $allowed);
+                            if ($res['success']) {
+                                $valor = $res['filename'];
+                            } else {
+                                $errores_campos[$p['id']] = $res['error'];
+                            }
+                        }
+                    } else {
+                        $valor = $_POST[$campo_name] ?? null;
+                        if (is_array($valor)) {
+                            $valor = array_values(array_filter($valor, static function ($v) {
+                                return $v !== '' && $v !== null;
+                            }));
+                        } elseif ($tipo === 'checkbox') {
+                            $valor = isset($_POST[$campo_name]) ? 1 : 0;
+                        }
                     }
 
                     if ($estado === 'enviado' && $requerido) {
@@ -215,7 +227,7 @@ if (!$formulario) {
             </div>
         </div>
 
-        <form method="POST" class="needs-validation" novalidate>
+        <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
             <?= csrf_field() ?>
 
             <div class="card mb-4">
@@ -253,9 +265,55 @@ if (!$formulario) {
                                 <div class="form-text">
                                     Haga clic en el mapa para indicar la ubicación. Se guardarán las coordenadas.
                                 </div>
-                            <?php elseif ($tipo === 'texto' || $tipo === 'numero' || $tipo === 'fecha' || $tipo === 'email'): ?>
+                            <?php elseif ($tipo === 'archivo'): ?>
                                 <input
-                                    type="<?= $tipo === 'texto' ? 'text' : ($tipo === 'numero' ? 'number' : ($tipo === 'fecha' ? 'date' : 'email')) ?>"
+                                    type="file"
+                                    name="<?= e($campo_name) ?>"
+                                    class="form-control"
+                                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                                    <?= $es_obligatorio && empty($valor) ? 'required' : '' ?>
+                                >
+                                <?php if (!empty($valor)): ?>
+                                <div class="form-text">
+                                    Archivo actual:
+                                    <a href="<?= UPLOADS_URL ?>/formularios/<?= e($valor) ?>" target="_blank"><?= e($valor) ?></a>
+                                    — Subí uno nuevo para reemplazarlo.
+                                </div>
+                                <?php endif; ?>
+                            <?php elseif ($tipo === 'direccion'): ?>
+                                <input
+                                    type="text"
+                                    name="<?= e($campo_name) ?>"
+                                    class="form-control"
+                                    placeholder="Ej: Av. Siempre Viva 742, Catamarca"
+                                    value="<?= e(is_array($valor) ? '' : (string)$valor) ?>"
+                                    <?= $es_obligatorio ? 'required' : '' ?>
+                                >
+                            <?php elseif ($tipo === 'numero'): ?>
+                                <input
+                                    type="number"
+                                    name="<?= e($campo_name) ?>"
+                                    class="form-control"
+                                    value="<?= e(is_array($valor) ? '' : (string)$valor) ?>"
+                                    <?= $es_obligatorio ? 'required' : '' ?>
+                                    <?= $p['min_valor'] !== null ? 'min="' . $p['min_valor'] . '"' : '' ?>
+                                    <?= $p['max_valor'] !== null ? 'max="' . $p['max_valor'] . '"' : '' ?>
+                                    step="any"
+                                >
+                                <?php if ($p['min_valor'] !== null || $p['max_valor'] !== null): ?>
+                                <div class="form-text">
+                                    <?php if ($p['min_valor'] !== null && $p['max_valor'] !== null): ?>
+                                        Valor entre <?= $p['min_valor'] ?> y <?= $p['max_valor'] ?>
+                                    <?php elseif ($p['min_valor'] !== null): ?>
+                                        Valor mínimo: <?= $p['min_valor'] ?>
+                                    <?php else: ?>
+                                        Valor máximo: <?= $p['max_valor'] ?>
+                                    <?php endif; ?>
+                                </div>
+                                <?php endif; ?>
+                            <?php elseif ($tipo === 'texto' || $tipo === 'fecha' || $tipo === 'email'): ?>
+                                <input
+                                    type="<?= $tipo === 'texto' ? 'text' : ($tipo === 'fecha' ? 'date' : 'email') ?>"
                                     name="<?= e($campo_name) ?>"
                                     class="form-control"
                                     value="<?= e(is_array($valor) ? '' : (string)$valor) ?>"
