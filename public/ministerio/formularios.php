@@ -108,24 +108,10 @@ $periodos = $db->query("SELECT DISTINCT periodo FROM datos_empresa ORDER BY peri
     <link href="<?= PUBLIC_URL ?>/css/styles.css" rel="stylesheet">
 </head>
 <body>
-    <aside class="sidebar">
-        <div class="sidebar-header"><span class="text-white fw-bold"><i class="bi bi-building me-2"></i>Ministerio</span></div>
-        <nav class="sidebar-menu">
-            <a href="dashboard.php"><i class="bi bi-speedometer2"></i> Dashboard</a>
-            <a href="empresas.php"><i class="bi bi-buildings"></i> Empresas</a>
-            <a href="nueva-empresa.php"><i class="bi bi-plus-circle"></i> Nueva Empresa</a>
-            <a href="formularios.php" class="active"><i class="bi bi-file-earmark-text"></i> Formularios</a>
-            <a href="graficos.php"><i class="bi bi-graph-up"></i> Gráficos y Datos</a>
-            <a href="publicaciones.php"><i class="bi bi-megaphone"></i> Publicaciones</a>
-            <a href="banners.php"><i class="bi bi-images"></i> Banners inicio</a>
-            <a href="comunicados.php"><i class="bi bi-send"></i> Enviar comunicados</a>
-            <a href="notificaciones.php"><i class="bi bi-bell"></i> Notificaciones</a>
-            <a href="exportar.php"><i class="bi bi-download"></i> Exportar</a>
-            <hr class="my-3 border-secondary">
-            <a href="<?= PUBLIC_URL ?>/" target="_blank"><i class="bi bi-globe"></i> Ver sitio</a>
-            <a href="<?= PUBLIC_URL ?>/logout.php"><i class="bi bi-box-arrow-left"></i> Cerrar sesión</a>
-        </nav>
-    </aside>
+    <?php
+    $ministerio_nav = 'formularios';
+    require __DIR__ . '/../../includes/ministerio_sidebar.php';
+    ?>
 
     <main class="main-content">
         <h1 class="h3 mb-4">Revisión de Formularios <span class="badge bg-primary"><?= $total ?></span></h1>
