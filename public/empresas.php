@@ -41,12 +41,18 @@ try {
     $stmt->execute($params);
     $empresas = $stmt->fetchAll();
     
-    $rubros_lista = $db->query("SELECT DISTINCT rubro FROM empresas WHERE rubro IS NOT NULL ORDER BY rubro")->fetchAll(PDO::FETCH_COLUMN);
-    $ubicaciones_lista = $db->query("SELECT DISTINCT ubicacion FROM empresas WHERE ubicacion IS NOT NULL ORDER BY ubicacion")->fetchAll(PDO::FETCH_COLUMN);
+    $rubros_lista = $db->query("SELECT rubro, COUNT(*) AS cnt FROM empresas WHERE rubro IS NOT NULL AND rubro != '' GROUP BY rubro ORDER BY rubro")->fetchAll();
+    $ubicaciones_lista = $db->query("SELECT ubicacion, COUNT(*) AS cnt FROM empresas WHERE ubicacion IS NOT NULL AND ubicacion != '' GROUP BY ubicacion ORDER BY ubicacion")->fetchAll();
     $total_paginas = ceil($total / $por_pagina);
 } catch (Exception $e) {
-    $empresas = []; $rubros_lista = []; $ubicaciones_lista = []; $total = 0; $total_paginas = 0;
+    $empresas = [];
+    $rubros_lista = [];
+    $ubicaciones_lista = [];
+    $total = 0;
+    $total_paginas = 0;
 }
+
+$filtros_activos = ($busqueda !== '' || $filtro_rubro !== '' || $filtro_ubicacion !== '');
 
 require_once BASEPATH . '/includes/header.php';
 ?>
@@ -71,8 +77,8 @@ require_once BASEPATH . '/includes/header.php';
                         <label class="form-label">Rubro</label>
                         <select name="rubro" class="form-select">
                             <option value="">Todos</option>
-                            <?php foreach ($rubros_lista as $r): ?>
-                            <option value="<?= e($r) ?>" <?= $filtro_rubro === $r ? 'selected' : '' ?>><?= e($r) ?></option>
+                            <?php foreach ($rubros_lista as $row): $r = $row['rubro']; $c = (int) $row['cnt']; ?>
+                            <option value="<?= e($r) ?>" <?= $filtro_rubro === $r ? 'selected' : '' ?>><?= e($r) ?> (<?= $c ?>)</option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -80,13 +86,16 @@ require_once BASEPATH . '/includes/header.php';
                         <label class="form-label">Ubicación</label>
                         <select name="ubicacion" class="form-select">
                             <option value="">Todas</option>
-                            <?php foreach ($ubicaciones_lista as $ub): ?>
-                            <option value="<?= e($ub) ?>" <?= $filtro_ubicacion === $ub ? 'selected' : '' ?>><?= e($ub) ?></option>
+                            <?php foreach ($ubicaciones_lista as $row): $ub = $row['ubicacion']; $c = (int) $row['cnt']; ?>
+                            <option value="<?= e($ub) ?>" <?= $filtro_ubicacion === $ub ? 'selected' : '' ?>><?= e($ub) ?> (<?= $c ?>)</option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-2 d-flex flex-column gap-2">
                         <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Buscar</button>
+                        <?php if ($filtros_activos): ?>
+                        <a href="empresas.php" class="btn btn-outline-secondary btn-sm w-100">Limpiar filtros</a>
+                        <?php endif; ?>
                     </div>
                 </form>
             </div>

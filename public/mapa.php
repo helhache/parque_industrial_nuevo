@@ -16,11 +16,17 @@ try {
     $rubros_unicos = count(array_unique(array_column($empresas, 'rubro')));
     
     // Solo ubicaciones reales: no se inventan coordenadas; las empresas sin lat/long no tendrán marcador
-    
+    $sin_coords = 0;
+    foreach ($empresas as $e) {
+        if (empty($e['latitud']) || empty($e['longitud'])) {
+            $sin_coords++;
+        }
+    }
 } catch (Exception $e) {
     $empresas = [];
     $total = 0;
     $rubros_unicos = 0;
+    $sin_coords = 0;
 }
 
 $body_class = 'page-mapa';
@@ -60,6 +66,11 @@ body.page-mapa .footer-bottom { margin-top: 0; }
 
 <div class="map-page">
     <div class="map-panel-left">
+        <?php if (!empty($sin_coords)): ?>
+        <div class="alert alert-warning border-0 rounded-0 small mb-0 py-2 px-3" role="status">
+            <strong>Mapa:</strong> <?= (int) $sin_coords ?> empresa(s) sin coordenadas (latitud/longitud). Cargalas desde el ministerio al editar cada empresa para ver marcadores.
+        </div>
+        <?php endif; ?>
         <div class="panel-header">
             <h4><i class="bi bi-geo-alt me-2"></i>Parque Industrial de Catamarca</h4>
             <div class="panel-stats">

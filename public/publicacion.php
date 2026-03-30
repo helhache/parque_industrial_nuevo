@@ -58,6 +58,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['me_gusta'])) {
     exit;
 }
 
+$publicacion = $pub;
+$extracto_meta = trim(strip_tags((string) ($pub['extracto'] ?? $pub['contenido'] ?? '')));
+if ($extracto_meta !== '') {
+    $custom_meta_description = truncate($extracto_meta, 158);
+}
+if (!empty($imagen_url)) {
+    $custom_og_image = $imagen_url;
+}
+
 include __DIR__ . '/../includes/header.php';
 ?>
 
@@ -65,12 +74,6 @@ include __DIR__ . '/../includes/header.php';
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="<?= PUBLIC_URL ?>/noticias.php">Noticias</a></li>
-                        <li class="breadcrumb-item active"><?= e(truncate($pub['titulo'], 50)) ?></li>
-                    </ol>
-                </nav>
                 <article class="card shadow-sm border-0">
                     <?php if ($imagen_url): ?>
                     <img src="<?= e($imagen_url) ?>" class="card-img-top" style="max-height: 400px; object-fit: cover;" alt="">

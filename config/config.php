@@ -118,6 +118,20 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Forzar HTTPS (p. ej. producci?n detr?s de proxy: respetar X-Forwarded-Proto)
+if (env_bool('FORCE_HTTPS', false) && PHP_SAPI !== 'cli') {
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
+    if (!$https) {
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        if ($host !== '') {
+            header('Location: https://' . $host . $uri, true, 302);
+            exit;
+        }
+    }
+}
+
 // Generar token CSRF si no existe
 if (empty($_SESSION[CSRF_TOKEN_NAME])) {
     $_SESSION[CSRF_TOKEN_NAME] = bin2hex(random_bytes(32));

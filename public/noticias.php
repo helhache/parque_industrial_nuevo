@@ -110,9 +110,24 @@ include __DIR__ . '/../includes/header.php';
         </div>
 
         <?php if (empty($publicaciones)): ?>
-        <div class="text-center py-5">
-            <i class="bi bi-newspaper display-1 text-muted"></i>
-            <p class="mt-3 text-muted">No se encontraron publicaciones</p>
+        <div class="text-center py-5 px-3">
+            <div class="mb-4" aria-hidden="true">
+                <i class="bi bi-newspaper text-muted" style="font-size: 4rem;"></i>
+            </div>
+            <h2 class="h4 mb-3">Aún no hay noticias para mostrar</h2>
+            <p class="text-muted mx-auto" style="max-width: 32rem;">
+                No hay publicaciones aprobadas que coincidan con tu búsqueda, o el directorio todavía no tiene contenido en esta sección.
+                Las empresas y el ministerio pueden publicar noticias, eventos y comunicados; las nuevas entradas aparecen aquí una vez aprobadas.
+            </p>
+            <?php
+            $rol = $_SESSION['user_rol'] ?? '';
+            if (in_array($rol, ['ministerio', 'admin'], true)): ?>
+            <a href="<?= e(MINISTERIO_URL) ?>/publicaciones.php" class="btn btn-primary mt-3"><i class="bi bi-kanban me-1"></i>Panel de publicaciones</a>
+            <?php elseif ($rol === 'empresa'): ?>
+            <a href="<?= e(EMPRESA_URL) ?>/publicaciones.php" class="btn btn-primary mt-3"><i class="bi bi-plus-circle me-1"></i>Mis publicaciones</a>
+            <?php else: ?>
+            <a href="<?= e(PUBLIC_URL) ?>/" class="btn btn-outline-primary mt-3">Volver al inicio</a>
+            <?php endif; ?>
         </div>
         <?php else: ?>
         <div class="row g-4">

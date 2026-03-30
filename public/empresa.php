@@ -59,6 +59,18 @@ try {
 
 $page_title = $empresa['nombre'];
 
+$meta_parts = ['Empresa del Parque Industrial de Catamarca: ' . ($empresa['nombre'] ?? '')];
+if (!empty($empresa['rubro'])) {
+    $meta_parts[] = 'Rubro: ' . $empresa['rubro'];
+}
+if (!empty($empresa['ubicacion'])) {
+    $meta_parts[] = $empresa['ubicacion'];
+}
+$custom_meta_description = truncate(trim(strip_tags(implode('. ', $meta_parts))), 158);
+if (!empty($empresa['logo'])) {
+    $custom_og_image = UPLOADS_URL . '/logos/' . $empresa['logo'];
+}
+
 require_once BASEPATH . '/includes/header.php';
 ?>
 
