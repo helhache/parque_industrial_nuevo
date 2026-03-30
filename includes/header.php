@@ -231,6 +231,11 @@ if ($current_page !== 'index') {
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link <?= $current_page === 'parque' ? 'active' : '' ?>" href="<?= PUBLIC_URL ?>/parque.php">
+                            <i class="bi bi-geo"></i> El Parque
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link <?= $current_page === 'estadisticas' ? 'active' : '' ?>" href="<?= PUBLIC_URL ?>/estadisticas.php">
                             <i class="bi bi-graph-up"></i> Estadísticas
                         </a>

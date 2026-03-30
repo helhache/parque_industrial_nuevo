@@ -16,6 +16,11 @@ try {
     $total_activas = 0;
 }
 
+$custom_meta_description = 'Parque Industrial El Pantanillo (Catamarca): ubicación, sectores y empresas radicadas. '
+    . ((int) $total_activas > 0
+        ? (int) $total_activas . ' empresas activas en el directorio del parque.'
+        : 'Información sobre infraestructura y radicación industrial en la provincia.');
+
 require_once BASEPATH . '/includes/header.php';
 ?>
 
