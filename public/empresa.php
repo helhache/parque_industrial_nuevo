@@ -26,10 +26,12 @@ try {
     
     // Incrementar visitas
     $db->prepare("UPDATE empresas SET visitas = visitas + 1 WHERE id = ?")->execute([$empresa_id]);
-    
-    // Registrar visita para mapa de calor
-    $stmt = $db->prepare("INSERT INTO visitas_empresa (empresa_id, ip, user_agent) VALUES (?, ?, ?)");
-    $stmt->execute([$empresa_id, $_SERVER['REMOTE_ADDR'] ?? null, $_SERVER['HTTP_USER_AGENT'] ?? null]);
+
+    // Registrar visita para mapa de calor (tabla opcional, ignorar si no existe)
+    try {
+        $stmt = $db->prepare("INSERT INTO visitas_empresa (empresa_id, ip, user_agent) VALUES (?, ?, ?)");
+        $stmt->execute([$empresa_id, $_SERVER['REMOTE_ADDR'] ?? null, $_SERVER['HTTP_USER_AGENT'] ?? null]);
+    } catch (Exception $e) { /* tabla aún no creada, no es crítico */ }
     
     // Obtener datos adicionales si existen
     $stmt = $db->prepare("SELECT * FROM datos_empresa WHERE empresa_id = ? ORDER BY periodo DESC LIMIT 1");
